@@ -8,8 +8,14 @@ set -e
 NODE_EXPORTER_VERSION="latest"
 NODE_EXPORTER_PORT="9100"
 
+# Function to get the latest release tag from GitHub
+get_latest_release() {
+    curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'
+}
+
 show_help() {
     echo "Node Exporter Installer"
+    echo "Base URL: https://github.com/prometheus/node_exporter"
     echo "Usage: $0 --method <docker|host>"
     echo ""
     echo "Options:"
@@ -69,17 +75,24 @@ install_host_method() {
     # Get main interface IP
     MAIN_IP=$(get_main_ip)
     echo "Detected main interface IP: $MAIN_IP"
+
+    # If version is "latest", resolve to actual latest tag
+    VERSION="$NODE_EXPORTER_VERSION"
+    if [[ "$VERSION" == "latest" ]]; then
+        VERSION=$(get_latest_release)
+        echo "Resolved latest Node Exporter version: $VERSION"
+    fi
     
     # Create node_exporter user
     sudo useradd --no-create-home --shell /bin/false node_exporter 2>/dev/null || true
     
     # Download and extract Node Exporter
     cd /tmp
-    wget https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
-    tar xvf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
+    wget https://github.com/prometheus/node_exporter/releases/download/${VERSION}/node_exporter-${VERSION#v}.linux-amd64.tar.gz
+    tar xvf node_exporter-${VERSION#v}.linux-amd64.tar.gz
     
     # Move binary to /usr/local/bin
-    sudo cp node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64/node_exporter /usr/local/bin/
+    sudo cp node_exporter-${VERSION#v}.linux-amd64/node_exporter /usr/local/bin/
     sudo chown node_exporter:node_exporter /usr/local/bin/node_exporter
     
     # Create systemd service file
@@ -105,7 +118,7 @@ EOF
     sudo systemctl start node_exporter
     
     # Clean up
-    rm -rf /tmp/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64*
+    rm -rf /tmp/node_exporter-${VERSION#v}.linux-amd64*
     
     echo "Node Exporter installed on host successfully!"
     echo "Service status: $(sudo systemctl is-active node_exporter)"
@@ -150,11 +163,10 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate method parameter
+# Default to host method if not specified
 if [[ -z "$METHOD" ]]; then
-    echo "Error: --method parameter is required"
-    show_help
-    exit 1
+    echo "No --method parameter specified, defaulting to 'host' installation."
+    METHOD="host"
 fi
 
 case $METHOD in
@@ -175,4 +187,5 @@ check_installation
 
 echo ""
 echo "Installation completed successfully!"
+echo "You can now configure Prometheus to scrape this Node Exporter instance."
 echo "You can now configure Prometheus to scrape this Node Exporter instance."
