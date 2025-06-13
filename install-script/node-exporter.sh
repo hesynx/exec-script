@@ -72,7 +72,8 @@ install_docker_method() {
 install_host_method() {
     echo "Installing Node Exporter directly on host..."
     
-    # Get main interface IP
+    # Set listen address to 0.0.0.0 for all interfaces
+    LISTEN_IP="0.0.0.0"
     MAIN_IP=$(get_main_ip)
     echo "Detected main interface IP: $MAIN_IP"
 
@@ -106,7 +107,7 @@ After=network-online.target
 User=node_exporter
 Group=node_exporter
 Type=simple
-ExecStart=/usr/local/bin/node_exporter --web.listen-address=${MAIN_IP}:${NODE_EXPORTER_PORT}
+ExecStart=/usr/local/bin/node_exporter --web.listen-address=${LISTEN_IP}:${NODE_EXPORTER_PORT}
 
 [Install]
 WantedBy=multi-user.target
@@ -128,14 +129,11 @@ EOF
 check_installation() {
     echo "Checking Node Exporter installation..."
     
-    # Get main interface IP
-    MAIN_IP=$(get_main_ip)
-    
-    # Wait a moment for service to start
+    # Use 127.0.0.1 for local check, but service listens on all interfaces
     sleep 3
     
-    if curl -s http://${MAIN_IP}:${NODE_EXPORTER_PORT}/metrics > /dev/null; then
-        echo "✓ Node Exporter is running and accessible on ${MAIN_IP}:${NODE_EXPORTER_PORT}"
+    if curl -s http://127.0.0.1:${NODE_EXPORTER_PORT}/metrics > /dev/null; then
+        echo "✓ Node Exporter is running and accessible on 0.0.0.0:${NODE_EXPORTER_PORT}"
         echo "✓ Metrics endpoint: http://${MAIN_IP}:${NODE_EXPORTER_PORT}/metrics"
     else
         echo "✗ Node Exporter is not accessible"
@@ -187,5 +185,7 @@ check_installation
 
 echo ""
 echo "Installation completed successfully!"
+echo "You can now configure Prometheus to scrape this Node Exporter instance."
+echo "You can now configure Prometheus to scrape this Node Exporter instance."
 echo "You can now configure Prometheus to scrape this Node Exporter instance."
 echo "You can now configure Prometheus to scrape this Node Exporter instance."
