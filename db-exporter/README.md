@@ -241,6 +241,106 @@ sudo systemctl status <exporter-name>_exporter
 docker ps | grep <exporter-name>-exporter
 ```
 
+## 🗑️ Uninstallation
+
+### Quick Uninstall
+
+```bash
+# Uninstall specific exporter
+curl -fsSL https://raw.githubusercontent.com/hesynx/exec-script/refs/heads/main/db-exporter/db-uninstaller.sh | bash -s -- --exporter <redis|mysql|postgres|mongodb>
+
+# Uninstall all database exporters
+curl -fsSL https://raw.githubusercontent.com/hesynx/exec-script/refs/heads/main/db-exporter/db-uninstaller.sh | bash -s -- --all
+
+# Force uninstall without confirmation
+curl -fsSL https://raw.githubusercontent.com/hesynx/exec-script/refs/heads/main/db-exporter/db-uninstaller.sh | bash -s -- --all --force
+```
+
+### Uninstaller Features
+
+- **Auto-Detection**: Automatically detects Docker and host installations
+- **Selective Removal**: Remove specific exporters or all at once
+- **Method Selection**: Choose to remove Docker containers, host services, or both
+- **Safety Checks**: Confirmation prompts before removal (can be bypassed with `--force`)
+- **Complete Cleanup**: Removes services, binaries, users, config files, and Docker images
+- **Verification**: Confirms successful removal after completion
+
+### Uninstaller Options
+
+- `--exporter <type>` - Remove specific exporter (redis, mysql, postgres, mongodb)
+- `--method <method>` - Remove specific installation type (docker, host, both)
+- `--all` - Remove all database exporters
+- `--force` - Skip confirmation prompts
+- `--help` - Show help message
+
+### Download and Run
+
+```bash
+# Download the uninstaller script
+curl -fsSL https://raw.githubusercontent.com/hesynx/exec-script/refs/heads/main/db-exporter/db-uninstaller.sh -o db-uninstaller.sh
+
+# Make it executable
+chmod +x db-uninstaller.sh
+
+# Uninstall specific exporter
+./db-uninstaller.sh --exporter redis
+
+# Uninstall all exporters
+./db-uninstaller.sh --all
+```
+
+### Manual Uninstallation
+
+#### Docker Containers
+```bash
+# Stop and remove Redis exporter
+docker stop redis-exporter && docker rm redis-exporter
+
+# Stop and remove MySQL exporter
+docker stop mysql-exporter && docker rm mysql-exporter
+
+# Stop and remove PostgreSQL exporter
+docker stop postgres-exporter && docker rm postgres-exporter
+
+# Stop and remove MongoDB exporter
+docker stop mongodb-exporter && docker rm mongodb-exporter
+```
+
+#### Host Services
+```bash
+# Redis exporter
+sudo systemctl stop redis_exporter
+sudo systemctl disable redis_exporter
+sudo rm /etc/systemd/system/redis_exporter.service
+sudo rm /usr/local/bin/redis_exporter
+sudo userdel redis_exporter
+
+# MySQL exporter
+sudo systemctl stop mysql_exporter
+sudo systemctl disable mysql_exporter
+sudo rm /etc/systemd/system/mysql_exporter.service
+sudo rm /usr/local/bin/mysqld_exporter
+sudo rm -rf /etc/mysql_exporter
+sudo userdel mysql_exporter
+
+# PostgreSQL exporter
+sudo systemctl stop postgres_exporter
+sudo systemctl disable postgres_exporter
+sudo rm /etc/systemd/system/postgres_exporter.service
+sudo rm /usr/local/bin/postgres_exporter
+sudo userdel postgres_exporter
+
+# MongoDB exporter
+sudo systemctl stop mongodb_exporter
+sudo systemctl disable mongodb_exporter
+sudo rm /etc/systemd/system/mongodb_exporter.service
+sudo rm /usr/local/bin/mongodb_exporter
+sudo userdel mongodb_exporter
+
+# Reload systemd after removing services
+sudo systemctl daemon-reload
+```
+
 ## 🚨 Troubleshooting
 
 ### Common Issues
