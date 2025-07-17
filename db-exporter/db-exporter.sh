@@ -16,11 +16,11 @@ MYSQL_PORT="9104"
 POSTGRES_PORT="9187"
 MONGODB_PORT="9216"
 
-# Default connection strings (will be auto-detected)
-REDIS_ADDR=""
-MYSQL_DSN=""
-POSTGRES_DSN=""
-MONGODB_URI=""
+# Default connection strings with standardized credentials
+REDIS_ADDR="redis://:1qa2ws3ed123@localhost:6379"
+MYSQL_DSN="exporter:1qa2ws3ed123@(localhost:3306)/"
+POSTGRES_DSN="postgresql://exporter:1qa2ws3ed123@localhost:5432/testdb?sslmode=disable"
+MONGODB_URI="mongodb://exporter:1qa2ws3ed123@localhost:27017/admin"
 
 # Function to get the latest release tag from GitHub
 get_latest_release() {
@@ -80,7 +80,7 @@ detect_database_services() {
             # Check for on-premises Redis (default port 6379)
             if netstat -tuln 2>/dev/null | grep -q ":6379 " || ss -tuln 2>/dev/null | grep -q ":6379 "; then
                 onprem_found=true
-                default_connection="redis://localhost:6379"
+                default_connection="redis://:1qa2ws3ed123@localhost:6379"
             fi
             
             # Check for Docker Redis containers
@@ -88,18 +88,7 @@ detect_database_services() {
                 if docker ps --format "table {{.Names}}\t{{.Ports}}" 2>/dev/null | grep -q "6379"; then
                     docker_found=true
                     if [[ "$onprem_found" == false ]]; then
-                        # Get Redis container IP
-                        local redis_container=$(docker ps --filter "publish=6379" --format "{{.Names}}" | head -1)
-                        if [[ -n "$redis_container" ]]; then
-                            default_connection="redis://localhost:6379"
-                        else
-                            # Try to find any Redis container
-                            redis_container=$(docker ps --filter "ancestor=redis" --format "{{.Names}}" | head -1)
-                            if [[ -n "$redis_container" ]]; then
-                                local redis_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$redis_container" 2>/dev/null)
-                                default_connection="redis://${redis_ip:-localhost}:6379"
-                            fi
-                        fi
+                        default_connection="redis://:1qa2ws3ed123@localhost:6379"
                     fi
                 fi
             fi
@@ -109,7 +98,7 @@ detect_database_services() {
             # Check for on-premises MySQL (default port 3306)
             if netstat -tuln 2>/dev/null | grep -q ":3306 " || ss -tuln 2>/dev/null | grep -q ":3306 "; then
                 onprem_found=true
-                default_connection="root:@(localhost:3306)/"
+                default_connection="exporter:1qa2ws3ed123@(localhost:3306)/"
             fi
             
             # Check for Docker MySQL containers
@@ -117,7 +106,7 @@ detect_database_services() {
                 if docker ps --format "table {{.Names}}\t{{.Ports}}" 2>/dev/null | grep -q "3306"; then
                     docker_found=true
                     if [[ "$onprem_found" == false ]]; then
-                        default_connection="root:@(localhost:3306)/"
+                        default_connection="exporter:1qa2ws3ed123@(localhost:3306)/"
                     fi
                 fi
             fi
@@ -127,7 +116,7 @@ detect_database_services() {
             # Check for on-premises PostgreSQL (default port 5432)
             if netstat -tuln 2>/dev/null | grep -q ":5432 " || ss -tuln 2>/dev/null | grep -q ":5432 "; then
                 onprem_found=true
-                default_connection="postgresql://postgres:@localhost:5432/postgres?sslmode=disable"
+                default_connection="postgresql://exporter:1qa2ws3ed123@localhost:5432/testdb?sslmode=disable"
             fi
             
             # Check for Docker PostgreSQL containers
@@ -135,7 +124,7 @@ detect_database_services() {
                 if docker ps --format "table {{.Names}}\t{{.Ports}}" 2>/dev/null | grep -q "5432"; then
                     docker_found=true
                     if [[ "$onprem_found" == false ]]; then
-                        default_connection="postgresql://postgres:@localhost:5432/postgres?sslmode=disable"
+                        default_connection="postgresql://exporter:1qa2ws3ed123@localhost:5432/testdb?sslmode=disable"
                     fi
                 fi
             fi
@@ -145,7 +134,7 @@ detect_database_services() {
             # Check for on-premises MongoDB (default port 27017)
             if netstat -tuln 2>/dev/null | grep -q ":27017 " || ss -tuln 2>/dev/null | grep -q ":27017 "; then
                 onprem_found=true
-                default_connection="mongodb://localhost:27017"
+                default_connection="mongodb://exporter:1qa2ws3ed123@localhost:27017/admin"
             fi
             
             # Check for Docker MongoDB containers
@@ -153,7 +142,7 @@ detect_database_services() {
                 if docker ps --format "table {{.Names}}\t{{.Ports}}" 2>/dev/null | grep -q "27017"; then
                     docker_found=true
                     if [[ "$onprem_found" == false ]]; then
-                        default_connection="mongodb://localhost:27017"
+                        default_connection="mongodb://exporter:1qa2ws3ed123@localhost:27017/admin"
                     fi
                 fi
             fi
@@ -183,10 +172,10 @@ detect_database_services() {
         echo "⚠ No running $db_type service detected, using defaults"
         DETECTED_METHOD="host"
         case $db_type in
-            redis) REDIS_ADDR="redis://localhost:6379" ;;
-            mysql) MYSQL_DSN="root:@(localhost:3306)/" ;;
-            postgres) POSTGRES_DSN="postgresql://postgres:@localhost:5432/postgres?sslmode=disable" ;;
-            mongodb) MONGODB_URI="mongodb://localhost:27017" ;;
+            redis) REDIS_ADDR="redis://:1qa2ws3ed123@localhost:6379" ;;
+            mysql) MYSQL_DSN="exporter:1qa2ws3ed123@(localhost:3306)/" ;;
+            postgres) POSTGRES_DSN="postgresql://exporter:1qa2ws3ed123@localhost:5432/testdb?sslmode=disable" ;;
+            mongodb) MONGODB_URI="mongodb://exporter:1qa2ws3ed123@localhost:27017/admin" ;;
         esac
     fi
     
