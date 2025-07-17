@@ -314,9 +314,9 @@ echo "========================================="
 # Final verification
 echo "Verifying removal..."
 if [[ "$ALL" == true ]]; then
-    local exporters=("redis" "mysql" "postgres" "mongodb")
+    exporters=("redis" "mysql" "postgres" "mongodb")
     for exporter in "${exporters[@]}"; do
-        local method=$(detect_installation_method "$exporter")
+        method=$(detect_installation_method "$exporter")
         if [[ "$method" == "none" ]]; then
             echo "✓ $exporter exporter: Not found (successfully removed)"
         else
@@ -324,7 +324,7 @@ if [[ "$ALL" == true ]]; then
         fi
     done
 elif [[ -n "$EXPORTER" ]]; then
-    local method=$(detect_installation_method "$EXPORTER")
+    method=$(detect_installation_method "$EXPORTER")
     if [[ "$method" == "none" ]]; then
         echo "✓ $EXPORTER exporter: Not found (successfully removed)"
     else
